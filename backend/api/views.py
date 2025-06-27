@@ -14,7 +14,6 @@ from .serializers import (
     RecipeSerializer, RecipeCreateSerializer,
     UserSerializer, IngredientSerializer
 )
-from .permissions import ReadOnlyOrAuthenticated
 
 
 def add_obj(request, pk, model_class):
@@ -49,13 +48,13 @@ def create_shopping_list(ingredients):
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (ReadOnlyOrAuthenticated,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    permission_classes = (ReadOnlyOrAuthenticated,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     pagination_class = None
 
 
