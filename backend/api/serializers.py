@@ -8,6 +8,7 @@ from recipes.models import (
     Recipe, Ingredient, IngredientRecipe,
     Favorite, ShoppingCart
 )
+from users.models import Subscription
 
 User = get_user_model()
 
@@ -128,6 +129,12 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
 
+class RecipeShortSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
 class SubscriptionSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
@@ -148,4 +155,25 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        return True
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return Subscription.objects.filter(
+                user=request.user, author=obj
+            ).exists()
+        return False
+
+    def get_recipes(self, obj):
+        request = self.context.get("request")
+        recipes = obj.recipes.all()
+        recipes_limit = request.query_params.get("recipes_limit")
+
+        if recipes_limit is not None and recipes_limit.isdigit():
+            recipes = recipes[:int(recipes_limit)]
+
+        serializer = RecipeShortSerializer(
+            recipes, many=True, context={"request": request}
+        )
+        return serializer.data
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
