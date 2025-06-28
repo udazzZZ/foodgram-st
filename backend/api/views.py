@@ -10,9 +10,10 @@ from recipes.models import (
     Recipe, Ingredient, IngredientRecipe,
     Favorite, ShoppingCart
 )
-from users.models import User
+from users.models import User, Subscription
 from .serializers import (
-    RecipeSerializer, RecipeCreateSerializer, IngredientSerializer
+    RecipeSerializer, RecipeCreateSerializer, IngredientSerializer,
+    SubscriptionSerializer
 )
 
 
@@ -54,6 +55,56 @@ class UserViewSet(DjoserUserViewSet):
         if self.action in ["list", "retrieve"]:
             return [permissions.AllowAny()]
         return super().get_permissions()
+
+    @action(detail=False, methods=['get'],
+            permission_classes=[permissions.IsAuthenticated]
+            )
+    def subscriptions(self, request):
+        user = request.user
+        subscriptions = User.objects.filter(subscriptions__user=user)
+
+        page = self.paginate_queryset(subscriptions)
+        if page is not None:
+            serializer = SubscriptionSerializer(
+                page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+
+        serializer = SubscriptionSerializer(
+            subscriptions, many=True, context={"request": request})
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post', 'delete'],
+            permission_classes=[permissions.IsAuthenticated])
+    def subscribe(self, request, id=None):
+        author = self.get_object()
+        user = request.user
+
+        if request.method == 'POST':
+            if author == user:
+                return Response(
+                    {"errors": "Нельзя подписаться на самого себя"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if Subscription.objects.filter(user=user, author=author).exists():
+                return Response(
+                    {"errors": "Вы уже подписаны на этого пользователя"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            Subscription.objects.create(user=user, author=author)
+            serializer = SubscriptionSerializer(
+                author, context={"request": request})
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if request.method == 'DELETE':
+            subscription = Subscription.objects.filter(
+                user=user, author=author).first()
+            if subscription:
+                subscription.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {"errors": "Вы не подписаны на этого пользователя"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
