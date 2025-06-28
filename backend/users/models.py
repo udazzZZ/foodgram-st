@@ -80,3 +80,30 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class Subscription(models.Model):
+    author = models.ForeignKey(
+        User,
+        related_name='subscribers',
+        on_delete=models.CASCADE,
+        verbose_name='Автор рецепта',
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='subscriptions',
+        verbose_name='Подписчик'
+    )
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'], name='unique_follow'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.user} {self.author}'

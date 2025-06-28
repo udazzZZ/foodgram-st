@@ -113,7 +113,7 @@ class Favorite(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='favorited',
+        related_name='favorited_by',
         verbose_name='Рецепт'
     )
 
@@ -138,7 +138,7 @@ class ShoppingCart(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='shopping_cart',
+        related_name='in_carts_of',
         verbose_name='Рецепт'
     )
 
