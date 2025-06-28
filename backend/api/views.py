@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.db.models import Sum
+from djoser.views import UserViewSet as DjoserUserViewSet
 
 from recipes.models import (
     Recipe, Ingredient, IngredientRecipe,
@@ -11,8 +12,7 @@ from recipes.models import (
 )
 from users.models import User
 from .serializers import (
-    RecipeSerializer, RecipeCreateSerializer,
-    UserSerializer, IngredientSerializer
+    RecipeSerializer, RecipeCreateSerializer, IngredientSerializer
 )
 
 
@@ -45,10 +45,15 @@ def create_shopping_list(ingredients):
     return shopping_list
 
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+class UserViewSet(DjoserUserViewSet):
+    def get_queryset(self):
+        users = User.objects.all()
+        return users
+
+    def get_permissions(self):
+        if self.action in ["list", "retrieve"]:
+            return [permissions.AllowAny()]
+        return super().get_permissions()
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):

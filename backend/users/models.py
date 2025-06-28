@@ -54,13 +54,6 @@ class User(AbstractUser):
         verbose_name='Фамилия'
     )
 
-    password = models.CharField(
-        max_length=100,
-        blank=False,
-        null=False,
-        verbose_name='Пароль'
-    )
-
     is_subscribed = models.BooleanField(
         default=False,
         verbose_name="Подписан",
@@ -72,6 +65,14 @@ class User(AbstractUser):
         null=True,
         verbose_name='Аватарка'
     )
+
+    USERNAME_FIELD = 'email'
+
+    REQUIRED_FIELDS = [
+        "username",
+        "first_name",
+        "last_name",
+    ]
 
     class Meta:
         verbose_name = 'Пользователь'

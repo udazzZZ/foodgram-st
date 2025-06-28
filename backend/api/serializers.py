@@ -1,29 +1,49 @@
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
+from djoser.serializers import UserCreateSerializer, UserSerializer
+from django.contrib.auth import get_user_model
 
-from users.models import User
+
 from recipes.models import (
     Recipe, Ingredient, IngredientRecipe,
     Favorite, ShoppingCart
 )
 
+User = get_user_model()
 
-class UserSerializer(serializers.ModelSerializer):
+
+class CustomUserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = (
-            'id', 'email', 'username', 'first_name',
-            'last_name', 'is_subscribed', 'password'
+            "email",
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "is_subscribed",
         )
-        extra_kwargs = {'password': {'write_only': True}}
 
     def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
+        request = self.context.get("request")
+        if not request or request.user.is_anonymous:
             return False
-        return False
+        return request.user.follower.filter(following=obj).exists()
+
+
+class CustomUserCreateSerializer(UserCreateSerializer):
+
+    class Meta(UserCreateSerializer.Meta):
+        model = User
+        fields = ("id",
+                  "email",
+                  "username",
+                  "first_name",
+                  "last_name",
+                  "password"
+                  )
 
 
 class IngredientSerializer(serializers.ModelSerializer):
