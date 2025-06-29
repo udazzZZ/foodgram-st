@@ -37,6 +37,26 @@ class RecipeAdmin(admin.ModelAdmin):
     get_favorite_count.short_description = 'Добавлений в избранное'
 
 
+class IngredientRecipeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'recipe_display', 'ingredient_display', 'amount')
+    list_editable = ('amount',)
+    search_fields = (
+        'recipe__name',
+        'ingredient__name',
+        'recipe__author__email',
+    )
+    list_filter = ('recipe', 'ingredient')
+
+    def recipe_display(self, obj):
+        recipe = obj.recipe
+        return f'{recipe.name} (id={recipe.id}, автор: {recipe.author.email})'
+    recipe_display.short_description = 'Рецепт'
+
+    def ingredient_display(self, obj):
+        return obj.ingredient.name
+    ingredient_display.short_description = 'Ингредиент'
+
+
 class ShoppingCartAdmin(admin.ModelAdmin):
     list_display = (
         'user',
@@ -57,6 +77,6 @@ class FavoriteAdmin(admin.ModelAdmin):
 
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Recipe, RecipeAdmin)
-admin.site.register(IngredientRecipe)
+admin.site.register(IngredientRecipe, IngredientRecipeAdmin)
 admin.site.register(ShoppingCart, ShoppingCartAdmin)
 admin.site.register(Favorite, FavoriteAdmin)
