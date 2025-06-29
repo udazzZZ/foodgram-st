@@ -19,6 +19,7 @@ from .serializers import (
     RecipeReadSerializer,
     RecipeWriteSerializer,
     RecipeShortSerializer,
+    CustomUserSerializer,
 )
 
 
@@ -28,7 +29,7 @@ class UserViewSet(DjoserUserViewSet):
         return users
 
     def get_permissions(self):
-        if self.action in ["list", "retrieve"]:
+        if self.action in ['list', 'retrieve']:
             return [permissions.AllowAny()]
         return super().get_permissions()
 
@@ -82,6 +83,44 @@ class UserViewSet(DjoserUserViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+    @action(
+        detail=False,
+        methods=['put', 'delete'],
+        url_path='me/avatar',
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def avatar(self, request):
+        if request.method == 'PUT':
+            if not request.data:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
+            if 'avatar' not in request.data:
+                return Response(
+                    {"error": "Поле 'avatar' обязательно"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            serializer = CustomUserSerializer(
+                self.request.user,
+                data=request.data,
+                partial=True,
+                context={'request': request}
+            )
+
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+            return Response(
+                {"avatar": serializer.data['avatar']},
+                status=status.HTTP_200_OK
+            )
+
+        if request.method == 'DELETE':
+            if request.user.avatar:
+                request.user.avatar.delete()
+                request.user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
@@ -129,7 +168,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=['get'],
-        url_name='get_link',
         url_path='get-link',
     )
     def get_link(self, request, pk):
