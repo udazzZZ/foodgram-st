@@ -3,12 +3,14 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
+from collections import defaultdict
+from django.http import HttpResponse
 
 from djoser.views import UserViewSet as DjoserUserViewSet
 from .filters import RecipeFilter
 
 from recipes.models import (
-    Recipe, Ingredient
+    Recipe, Ingredient, IngredientRecipe
 )
 from users.models import User, Subscription
 from .serializers import (
@@ -199,3 +201,34 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
             request.user.shopping_cart.filter(recipe=recipe).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def download_shopping_cart(self, request):
+        user = request.user
+        recipes = user.shopping_cart.values_list('recipe', flat=True)
+
+        ingredients = IngredientRecipe.objects.filter(
+            recipe__in=recipes
+        ).select_related('ingredient')
+
+        shopping_list = defaultdict(lambda: {'unit': '', 'amount': 0})
+        for item in ingredients:
+            name = item.ingredient.name
+            unit = item.ingredient.measurement_unit
+            shopping_list[name]['unit'] = unit
+            shopping_list[name]['amount'] += item.amount
+
+        lines = ["Список покупок:\n"]
+        for name, data in shopping_list.items():
+            lines.append(f"{name} ({data['unit']}) — {data['amount']}")
+
+        content = "\n".join(lines)
+        response = HttpResponse(content, content_type='text/plain')
+        response['Content-Disposition'] = (
+            'attachment; filename="shopping_cart.txt"'
+        )
+        return response
