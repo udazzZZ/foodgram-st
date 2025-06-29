@@ -41,7 +41,7 @@ class Recipe(models.Model):
         verbose_name='Название',
     )
     image = models.ImageField(
-        upload_to='recipes/',
+        upload_to='recipes/images/',
         blank=True,
         verbose_name='Картинка',
     )
@@ -52,6 +52,7 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         Ingredient,
         through='IngredientRecipe',
+        related_name='recipes',
         verbose_name='Ингредиенты',
     )
     cooking_time = models.PositiveSmallIntegerField(
@@ -84,6 +85,7 @@ class IngredientRecipe(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
+        related_name='recipe_ingredients',
         verbose_name='Рецепт',
     )
 

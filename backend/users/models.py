@@ -9,7 +9,7 @@ from django.core.validators import (
 
 class User(AbstractUser):
     email = models.EmailField(
-        max_length=256,
+        max_length=254,
         unique=True,
         blank=False,
         null=False,
@@ -17,7 +17,7 @@ class User(AbstractUser):
     )
 
     username = models.CharField(
-        max_length=100,
+        max_length=150,
         unique=True,
         blank=False,
         null=False,
@@ -41,14 +41,14 @@ class User(AbstractUser):
     )
 
     first_name = models.CharField(
-        max_length=100,
+        max_length=150,
         blank=False,
         null=False,
         verbose_name='Имя'
     )
 
     last_name = models.CharField(
-        max_length=100,
+        max_length=150,
         blank=False,
         null=False,
         verbose_name='Фамилия'
@@ -60,7 +60,7 @@ class User(AbstractUser):
     )
 
     avatar = models.ImageField(
-        upload_to='avatars/',
+        upload_to='users/avatars/',
         blank=True,
         null=True,
         verbose_name='Аватарка'

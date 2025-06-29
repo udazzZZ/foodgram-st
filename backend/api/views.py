@@ -1,18 +1,20 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.http import HttpResponse
-from django.db.models import Sum
+from django_filters.rest_framework import DjangoFilterBackend
+
 from djoser.views import UserViewSet as DjoserUserViewSet
+from .filters import RecipeFilter
 
 from recipes.models import (
-    Recipe, Ingredient, IngredientRecipe,
-    Favorite, ShoppingCart
+    Recipe, Ingredient
 )
 from users.models import User, Subscription
 from .serializers import (
-    RecipeSerializer, RecipeCreateSerializer, IngredientSerializer,
-    SubscriptionSerializer
+    IngredientSerializer,
+    SubscriptionSerializer,
+    RecipeReadSerializer,
+    RecipeWriteSerializer
 )
 
 
@@ -87,43 +89,13 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
-        if self.request.method in permissions.SAFE_METHODS:
-            return RecipeSerializer
-        return RecipeCreateSerializer
+        if self.action in ['list', 'retrieve']:
+            return RecipeReadSerializer
+        return RecipeWriteSerializer
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-
-    @action(methods=['post', 'delete'], detail=True)
-    def favorite(self, request, pk):
-        if request.method == "POST":
-            data, status_code = add_obj(request, pk, Favorite)
-            return Response(data, status=status_code)
-        data, status_code = del_obj(request, pk, Favorite)
-        return Response(data, status=status_code)
-
-    @action(methods=['post', 'delete'], detail=True)
-    def shopping_cart(self, request, pk):
-        if request.method == "POST":
-            data, status_code = add_obj(request, pk, ShoppingCart)
-            return Response(data, status=status_code)
-        data, status_code = del_obj(request, pk, ShoppingCart)
-        return Response(data, status=status_code)
-
-    @action(methods=['get'], detail=False,
-            permission_classes=[permissions.IsAuthenticated])
-    def download_shopping_cart(self, request):
-        ingredients = IngredientRecipe.objects.filter(
-            recipe__shopping_cart__user=request.user).values(
-                'ingredient__name',
-                'ingredient__measurement_unit').annotate(
-                    amount=Sum('amount')).order_by('ingredient__name')
-
-        shopping_list = create_shopping_list(ingredients)
-        response = HttpResponse(shopping_list, content_type='text/plain')
-        response['Content-Disposition'] = (
-            'attachment; filename={0}'.format('shopping_list.txt')
-        )
-        return response
+    def get_serializer_context(self):
+        return {'request': self.request}
