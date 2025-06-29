@@ -7,7 +7,7 @@ from collections import defaultdict
 from django.http import HttpResponse
 
 from djoser.views import UserViewSet as DjoserUserViewSet
-from .filters import RecipeFilter
+from .filters import RecipeFilter, IngredientFilter
 
 from recipes.models import (
     Recipe, Ingredient, IngredientRecipe
@@ -130,6 +130,8 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     pagination_class = None
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientFilter
 
 
 class RecipeViewSet(viewsets.ModelViewSet):

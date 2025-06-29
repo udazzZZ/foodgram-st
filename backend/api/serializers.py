@@ -208,7 +208,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        request = self.context.get("request")
+        request = self.context.get('request')
         if request and request.user.is_authenticated:
             return Subscription.objects.filter(
                 user=request.user, author=obj
@@ -216,9 +216,9 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         return False
 
     def get_recipes(self, obj):
-        request = self.context.get("request")
+        request = self.context.get('request')
         recipes = obj.recipes.all()
-        recipes_limit = request.query_params.get("recipes_limit")
+        recipes_limit = request.query_params.get('recipes_limit')
         if recipes_limit and recipes_limit.isdigit():
             recipes = recipes[:int(recipes_limit)]
         return RecipeShortSerializer(
