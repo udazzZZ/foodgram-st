@@ -22,6 +22,7 @@ from .serializers import (
     CustomUserSerializer,
 )
 from .pagination import LimitPageNumberPagination
+from .permissions import IsAuthorOrReadOnly
 
 
 class UserViewSet(DjoserUserViewSet):
@@ -136,7 +137,10 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (
+        IsAuthorOrReadOnly,
+        permissions.IsAuthenticatedOrReadOnly,
+    )
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     pagination_class = LimitPageNumberPagination
