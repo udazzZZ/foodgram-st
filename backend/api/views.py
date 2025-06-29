@@ -21,9 +21,12 @@ from .serializers import (
     RecipeShortSerializer,
     CustomUserSerializer,
 )
+from .pagination import LimitPageNumberPagination
 
 
 class UserViewSet(DjoserUserViewSet):
+    pagination_class = LimitPageNumberPagination
+
     def get_queryset(self):
         users = User.objects.all()
         return users
@@ -134,6 +137,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
+    pagination_class = LimitPageNumberPagination
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve']:
