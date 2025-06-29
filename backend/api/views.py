@@ -2,6 +2,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
 
 from djoser.views import UserViewSet as DjoserUserViewSet
 from .filters import RecipeFilter
@@ -14,7 +15,8 @@ from .serializers import (
     IngredientSerializer,
     SubscriptionSerializer,
     RecipeReadSerializer,
-    RecipeWriteSerializer
+    RecipeWriteSerializer,
+    RecipeShortSerializer,
 )
 
 
@@ -121,3 +123,46 @@ class RecipeViewSet(viewsets.ModelViewSet):
             instance, context=self.get_serializer_context()
         )
         return Response(read_serializer.data)
+
+    @action(
+        detail=True,
+        methods=['get'],
+        url_name='get_link',
+        url_path='get-link',
+    )
+    def get_link(self, request, pk):
+        get_object_or_404(Recipe, id=pk)
+        link = request.build_absolute_uri(f'/recipes/{pk}/')
+        return Response({"short-link": link}, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def favorite(self, request, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
+
+        if request.method == 'POST':
+            if request.user.favorites.filter(recipe=recipe).exists():
+                return Response(
+                    {"errors": "Рецепт уже в избранном"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            request.user.favorites.create(recipe=recipe)
+            serializer = RecipeShortSerializer(
+                recipe, context=self.get_serializer_context())
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if request.method == 'DELETE':
+            in_favorite = request.user.favorites.filter(recipe=recipe).exists()
+
+            if not in_favorite:
+                return Response(
+                    {"errors": "Рецепт не находится в избранном"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            request.user.favorites.filter(recipe=recipe).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
