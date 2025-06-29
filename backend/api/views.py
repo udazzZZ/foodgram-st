@@ -166,3 +166,36 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
             request.user.favorites.filter(recipe=recipe).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def shopping_cart(self, request, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
+
+        exists = request.user.shopping_cart.filter(recipe=recipe).exists()
+
+        if request.method == 'POST':
+            if exists:
+                return Response(
+                    {"errors": "Рецепт уже в списке покупок"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            request.user.shopping_cart.create(recipe=recipe)
+            serializer = RecipeShortSerializer(
+                recipe, context=self.get_serializer_context()
+            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if request.method == 'DELETE':
+            if not exists:
+                return Response(
+                    {"errors": "Рецепт не находится в списке покупок"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            request.user.shopping_cart.filter(recipe=recipe).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
