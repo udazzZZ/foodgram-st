@@ -82,14 +82,6 @@ class RecipeIngredientReadSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "measurement_unit", "amount")
 
 
-class IngredientWriteSerializer(serializers.Serializer):
-    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
-    amount = serializers.IntegerField(
-        min_value=MIN_INGREDIENT_AMOUNT,
-        max_value=MAX_INGREDIENT_AMOUNT
-    )
-
-
 class RecipeReadSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     ingredients = RecipeIngredientReadSerializer(
