@@ -1,0 +1,138 @@
+[
+    {
+        "model": "users.user",
+        "pk": 1,
+        "fields": {
+            "password": "pbkdf2_sha256$260000$test$fakehashedpassword1",
+            "email": "user1@example.com",
+            "username": "user1",
+            "first_name": "Иван",
+            "last_name": "Иванов",
+            "is_subscribed": false,
+            "is_staff": false,
+            "is_superuser": false
+        }
+    },
+    {
+        "model": "users.user",
+        "pk": 2,
+        "fields": {
+            "password": "pbkdf2_sha256$260000$test$fakehashedpassword2",
+            "email": "user2@example.com",
+            "username": "user2",
+            "first_name": "Ольга",
+            "last_name": "Петрова",
+            "is_subscribed": false,
+            "is_staff": false,
+            "is_superuser": false
+        }
+    },
+    {
+        "model": "users.user",
+        "pk": 3,
+        "fields": {
+            "password": "pbkdf2_sha256$260000$test$fakehashedpassword3",
+            "email": "user3@example.com",
+            "username": "user3",
+            "first_name": "Максим",
+            "last_name": "Сидоров",
+            "is_subscribed": false,
+            "is_staff": false,
+            "is_superuser": false
+        }
+    },
+    {
+        "model": "users.user",
+        "pk": 999,
+        "fields": {
+            "password": "pbkdf2_sha256$260000$test$fakehashedadmin",
+            "email": "admin@example.com",
+            "username": "admin",
+            "first_name": "Админ",
+            "last_name": "Системов",
+            "is_subscribed": false,
+            "is_staff": true,
+            "is_superuser": true
+        }
+    },
+
+    {
+        "model": "recipes.recipe",
+        "pk": 1,
+        "fields": {
+            "author": 1,
+            "name": "Блины",
+            "image": "",
+            "text": "Вкусные блины с начинкой",
+            "cooking_time": 15
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 2,
+        "fields": {
+            "author": 2,
+            "name": "Омлет",
+            "image": "",
+            "text": "Пышный омлет на завтрак",
+            "cooking_time": 10
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 3,
+        "fields": {
+            "author": 3,
+            "name": "Салат",
+            "image": "",
+            "text": "Лёгкий овощной салат",
+            "cooking_time": 8
+        }
+    },
+
+    {
+        "model": "recipes.ingredientrecipe",
+        "pk": 1,
+        "fields": {
+            "ingredient": 1,
+            "recipe": 1,
+            "amount": 100
+        }
+    },
+    {
+        "model": "recipes.ingredientrecipe",
+        "pk": 2,
+        "fields": {
+            "ingredient": 2,
+            "recipe": 1,
+            "amount": 200
+        }
+    },
+    {
+        "model": "recipes.ingredientrecipe",
+        "pk": 3,
+        "fields": {
+            "ingredient": 3,
+            "recipe": 2,
+            "amount": 3
+        }
+    },
+    {
+        "model": "recipes.ingredientrecipe",
+        "pk": 4,
+        "fields": {
+            "ingredient": 4,
+            "recipe": 2,
+            "amount": 100
+        }
+    },
+    {
+        "model": "recipes.ingredientrecipe",
+        "pk": 5,
+        "fields": {
+            "ingredient": 5,
+            "recipe": 3,
+            "amount": 150
+        }
+    }
+]
