@@ -1,4 +1,39 @@
-Находясь в папке infra, выполните команду docker-compose up. При выполнении этой команды контейнер frontend, описанный в docker-compose.yml, подготовит файлы, необходимые для работы фронтенд-приложения, а затем прекратит свою работу.
+# Foodgram - Сервис рецептов
 
-По адресу http://localhost изучите фронтенд веб-приложения, а по адресу http://localhost/api/docs/ — спецификацию API.
+## Запуск проекта
 
+### Требования для запуска с Docker
+
+-   Docker
+-   Docker Compose
+
+### 1. Клонирование репозитория
+
+```bash
+git clone https://github.com/udazzZZ/foodgram-st.git
+cd foodgram-st
+```
+
+### 2. Переменные окружения
+
+В папке infra переименовать .env.example в .env
+
+### 3. Запуск контейнеров
+
+Находясь в главной папке проекта выполнить:
+
+```bash
+docker-compose up --build
+```
+
+### 4. Заполнение бд тестовыми данными
+
+После запуска контейнеров в новом окне терминала, находясь в главной папке проекта, выполнить последовательно:
+
+```bash
+docker exec -it backend python manage.py loaddata data/ingredients.json
+```
+
+```bash
+docker exec -it backend python manage.py loaddata data/fixture.json
+```

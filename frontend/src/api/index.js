@@ -133,7 +133,9 @@ class Api {
     author
   } = {}) {
     const token = localStorage.getItem("token");
-    const authorization = token ? { authorization: `Token ${token}` } : {};
+    const authorization = token && token !== "null"
+      ? { authorization: `Token ${token}` }
+      : {};
     return fetch(
       `/api/recipes/?page=${page}&limit=${limit}${
         author ? `&author=${author}` : ""
