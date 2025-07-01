@@ -10,6 +10,7 @@ import random
 import string
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db import models
 
 from djoser.views import UserViewSet as DjoserUserViewSet
 from .filters import RecipeFilter, IngredientFilter
@@ -173,70 +174,57 @@ class UserViewSet(DjoserUserViewSet):
             status=status.HTTP_200_OK
         )
 
-    @action(
-        detail=False,
-        methods=['get'],
-        permission_classes=[permissions.IsAuthenticated],
-    )
-    def download_favorites(self, request):
-        user = request.user
-        favorite_recipes = user.favorites.values_list('recipe', flat=True)
-
-        recipes = Recipe.objects.filter(id__in=favorite_recipes)
-
-        lines = ["Избранные рецепты:\n"]
-        for recipe in recipes:
-            lines.append(f"{recipe.name} — {recipe.author.username}")
-
-        content = "\n".join(lines)
-        response = HttpResponse(content, content_type='text/plain')
-        response['Content-Disposition'] = (
-            'attachment; filename="favorite_recipes.txt"'
-        )
-        return response
+    @action(detail=False, methods=['get'],
+            permission_classes=[permissions.AllowAny]
+            )
+    def all_users(self, request):
+        users = User.objects.all()
+        data = [
+            {
+                "username": user.username,
+                "email": user.email,
+                "recipes": user.recipes.count(),
+                "subscriptions": Subscription.objects.filter(user=user).count(),
+                "subscribers": Subscription.objects.filter(author=user).count()
+            }
+            for user in users
+        ]
+        return Response(data)
 
     @action(
         detail=False,
         methods=['get'],
-        permission_classes=[permissions.IsAuthenticated],
+        permission_classes=[permissions.AllowAny],
+        url_path='global-stats',
     )
-    def download_subscriptions(self, request):
-        user = request.user
-        subscriptions = User.objects.filter(subscribers__user=user)
-
-        lines = ["Вы подписаны на:\n"]
-        for sub in subscriptions:
-            lines.append(f"{sub.username} — {sub.email}")
-
-        content = "\n".join(lines)
-        response = HttpResponse(content, content_type='text/plain')
-        response['Content-Disposition'] = (
-            'attachment; filename="subscriptions.txt"'
-        )
-        return response
-
-    @action(
-        detail=False,
-        methods=['get'],
-        permission_classes=[permissions.IsAuthenticated],
-        url_path='activity',
-    )
-    def activity(self, request):
-        user = request.user
-
-        recipes_count = user.recipes.count()
-        subscriptions_count = Subscription.objects.filter(user=user).count()
-        subscribers_count = Subscription.objects.filter(author=user).count()
-        favorites_count = user.favorites.count()
-        shopping_cart_count = user.shopping_cart.count()
+    def global_stats(self, request):
+        total_users = User.objects.count()
+        total_recipes = Recipe.objects.count()
+        total_subscriptions = Subscription.objects.count()
 
         return Response({
-            "recipes": recipes_count,
-            "subscriptions": subscriptions_count,
-            "subscribers": subscribers_count,
-            "favorites": favorites_count,
-            "shopping_cart": shopping_cart_count,
+            "total_users": total_users,
+            "total_recipes": total_recipes,
+            "total_subscriptions": total_subscriptions
         })
+
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[permissions.AllowAny],
+        url_path='top-authors'
+    )
+    def top_authors(self, request):
+        authors = User.objects.annotate(recipe_count=models.Count(
+            'recipes')).order_by('-recipe_count')[:5]
+        data = [
+            {
+                "username": author.username,
+                "email": author.email,
+                "recipes": author.recipe_count
+            } for author in authors
+        ]
+        return Response(data)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
