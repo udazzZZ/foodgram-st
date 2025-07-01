@@ -5,6 +5,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from collections import defaultdict
 from django.http import HttpResponse
+from rest_framework.authtoken.models import Token
+import random
+import string
+from django.conf import settings
+from django.core.mail import send_mail
 
 from djoser.views import UserViewSet as DjoserUserViewSet
 from .filters import RecipeFilter, IngredientFilter
@@ -124,6 +129,114 @@ class UserViewSet(DjoserUserViewSet):
                 request.user.avatar.delete()
                 request.user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=False,
+        methods=['post'],
+        url_path='reset_password',
+        permission_classes=[permissions.AllowAny]
+    )
+    def reset_password(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response(
+                {"error": "Email обязателен."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Пользователь с таким email не найден."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        new_password = ''.join(random.choices(
+            string.ascii_letters + string.digits, k=10))
+        user.set_password(new_password)
+        user.save()
+
+        Token.objects.filter(user=user).delete()
+
+        send_mail(
+            subject='Сброс пароля',
+            message=f'Ваш новый пароль: {new_password}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            fail_silently=False,
+        )
+
+        return Response(
+            {"detail": ("Новый пароль отправлен "
+                        "на почту. Выполнен выход из системы.")},
+            status=status.HTTP_200_OK
+        )
+
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def download_favorites(self, request):
+        user = request.user
+        favorite_recipes = user.favorites.values_list('recipe', flat=True)
+
+        recipes = Recipe.objects.filter(id__in=favorite_recipes)
+
+        lines = ["Избранные рецепты:\n"]
+        for recipe in recipes:
+            lines.append(f"{recipe.name} — {recipe.author.username}")
+
+        content = "\n".join(lines)
+        response = HttpResponse(content, content_type='text/plain')
+        response['Content-Disposition'] = (
+            'attachment; filename="favorite_recipes.txt"'
+        )
+        return response
+
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def download_subscriptions(self, request):
+        user = request.user
+        subscriptions = User.objects.filter(subscribers__user=user)
+
+        lines = ["Вы подписаны на:\n"]
+        for sub in subscriptions:
+            lines.append(f"{sub.username} — {sub.email}")
+
+        content = "\n".join(lines)
+        response = HttpResponse(content, content_type='text/plain')
+        response['Content-Disposition'] = (
+            'attachment; filename="subscriptions.txt"'
+        )
+        return response
+
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[permissions.IsAuthenticated],
+        url_path='activity',
+    )
+    def activity(self, request):
+        user = request.user
+
+        recipes_count = user.recipes.count()
+        subscriptions_count = Subscription.objects.filter(user=user).count()
+        subscribers_count = Subscription.objects.filter(author=user).count()
+        favorites_count = user.favorites.count()
+        shopping_cart_count = user.shopping_cart.count()
+
+        return Response({
+            "recipes": recipes_count,
+            "subscriptions": subscriptions_count,
+            "subscribers": subscribers_count,
+            "favorites": favorites_count,
+            "shopping_cart": shopping_cart_count,
+        })
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):

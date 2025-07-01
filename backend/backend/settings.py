@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'api',
     'recipes',
     'users',
+    'django.contrib.sites'
 ]
 
 MIDDLEWARE = [
@@ -58,7 +59,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -167,26 +168,11 @@ DJOSER = {
 
 AUTH_USER_MODEL = 'users.User'
 
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
-EMAIL_HOST = 'smtp.yandex.ru'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-EMAIL_HOST_USER = 'alexa.catcotik@yandex.ru'
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
-
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
-AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend",
-]
-
-SITE_ID = 1
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'no-reply@foodgram.fake'
 
 LOGIN_REDIRECT_URL = 'http://localhost/recipes'
 ACCOUNT_LOGOUT_REDIRECT_URL = 'http://localhost/recipes'
 
 ACCOUNT_LOGIN_METHODS = {'email'}
-ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_EMAIL_VERIFICATION = 'none'
