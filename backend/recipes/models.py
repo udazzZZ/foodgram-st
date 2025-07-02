@@ -5,9 +5,9 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 MIN_COOKING_VALUE = 1
-MAX_COOKING_VALUE = 15000
+MAX_COOKING_VALUE = 32000
 MIN_AMOUNT_VALUE = 1
-MAX_AMOUNT_VALUE = 10000
+MAX_AMOUNT_VALUE = 32000
 
 
 class Ingredient(models.Model):
@@ -89,7 +89,7 @@ class IngredientRecipe(models.Model):
         verbose_name='Рецепт',
     )
 
-    amount = models.IntegerField(
+    amount = models.PositiveSmallIntegerField(
         validators=[
             MinValueValidator(
                 MIN_AMOUNT_VALUE
@@ -97,7 +97,8 @@ class IngredientRecipe(models.Model):
             MaxValueValidator(
                 MAX_AMOUNT_VALUE
             )
-        ]
+        ],
+        verbose_name='Количество',
     )
 
     class Meta:
