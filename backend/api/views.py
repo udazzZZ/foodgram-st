@@ -66,7 +66,7 @@ class UserViewSet(DjoserUserViewSet):
                     {"errors": "Нельзя подписаться на самого себя"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            if Subscription.objects.filter(user=user, author=author).exists():
+            if user.subscriptions.filter(author=author).exists():
                 return Response(
                     {"errors": "Вы уже подписаны на этого пользователя"},
                     status=status.HTTP_400_BAD_REQUEST
@@ -77,8 +77,7 @@ class UserViewSet(DjoserUserViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == 'DELETE':
-            subscription = Subscription.objects.filter(
-                user=user, author=author).first()
+            subscription = user.subscriptions.filter(author=author).first()
             if subscription:
                 subscription.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
