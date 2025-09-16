@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-config
+  namespace: foodgram
+data:
+  POSTGRES_DB: foodgram
+  POSTGRES_USER: postgres
+  DB_PORT: "5432"
