@@ -5,11 +5,10 @@ from django.core.files.base import ContentFile
 import base64
 
 from recipes.models import Recipe, Ingredient, IngredientRecipe
-from users.models import Subscription
 
 User = get_user_model()
-MIN_INGREDIENT_AMOUNT = 1
-MAX_INGREDIENT_AMOUNT = 1000
+MIN_AMOUNT = 1
+MAX_AMOUNT = 32000
 
 
 class Base64ImageField(serializers.ImageField):
@@ -38,7 +37,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
+        user = self.context['request'].user
         if user.is_anonymous:
             return False
         return user.subscriptions.filter(author=obj).exists()
@@ -66,8 +65,8 @@ class IngredientSerializer(serializers.ModelSerializer):
 class RecipeIngredientWriteSerializer(serializers.Serializer):
     id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
     amount = serializers.IntegerField(
-        min_value=MIN_INGREDIENT_AMOUNT,
-        max_value=MAX_INGREDIENT_AMOUNT,
+        min_value=MIN_AMOUNT,
+        max_value=MAX_AMOUNT,
     )
 
 
@@ -127,6 +126,10 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         write_only=True
     )
     author = CustomUserSerializer(read_only=True)
+    cooking_time = serializers.IntegerField(
+        min_value=MIN_AMOUNT,
+        max_value=MAX_AMOUNT
+    )
 
     class Meta:
         model = Recipe
@@ -209,10 +212,9 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return Subscription.objects.filter(
-                user=request.user, author=obj
-            ).exists()
+        user = getattr(request, 'user', None)
+        if user and user.is_authenticated:
+            return user.subscriptions.filter(author=obj).exists()
         return False
 
     def get_recipes(self, obj):
