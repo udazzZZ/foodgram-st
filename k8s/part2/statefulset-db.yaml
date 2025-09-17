@@ -1,37 +1,54 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: db
+  name: postgres-sts
   namespace: foodgram
 spec:
-  serviceName: "db"
+  serviceName: postgres-headless-svc
   replicas: 1
   selector:
     matchLabels:
-      app: db
+      app: postgres
   template:
     metadata:
       labels:
-        app: db
+        app: postgres
     spec:
       containers:
-        - name: postgres
-          image: postgres:14.7
+        - name: postgresql
+          image: postgres:17
+          imagePullPolicy: "IfNotPresent"
+          env:
+            - name: PGDATA
+              value: "/var/lib/postgresql/data/pgdata"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: POSTGRES_DB
           ports:
-            - containerPort: 5432
-          envFrom:
-            - configMapRef:
-                name: db-config
-            - secretRef:
-                name: db-secret
+            - name: postgresql
+              containerPort: 5432
+              protocol: TCP
           volumeMounts:
-            - name: postgres-storage
+            - name: data
               mountPath: /var/lib/postgresql/data
   volumeClaimTemplates:
     - metadata:
-        name: postgres-storage
+        name: data
       spec:
-        accessModes: ["ReadWriteOnce"]
+        accessModes:
+          - "ReadWriteOnce"
         resources:
           requests:
-            storage: 1Gi
+            storage: "10Gi"

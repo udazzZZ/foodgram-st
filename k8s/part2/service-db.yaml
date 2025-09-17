@@ -1,13 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: db
+  name: postgres-headless-svc
   namespace: foodgram
 spec:
-  selector:
-    app: db
+  type: ClusterIP
+  clusterIP: None
   ports:
-    - name: postgres
-      port: 5432
-      targetPort: 5432
-  clusterIP: None   # Headless Service для StatefulSet
+  - name: postgresql
+    port: 5432
+    targetPort: postgresql
+    protocol: TCP 
+  selector:
+    app: postgres
