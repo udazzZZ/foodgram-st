@@ -14,12 +14,12 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: foodgram-nginx:latest   # твой собранный образ
+        image: foodgram-nginx:latest
         ports:
         - containerPort: 80
         volumeMounts:
         - name: media-files
-          mountPath: /var/html/media/
+          mountPath: /app/media/
       volumes:
       - name: media-files
         persistentVolumeClaim:

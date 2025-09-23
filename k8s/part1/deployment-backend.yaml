@@ -14,28 +14,37 @@ spec:
         app: backend
     spec:
       containers:
-        - name: backend
-          image: foodgram-backend:latest
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 8000
-          env:
-            - name: POSTGRES_USER
-              valueFrom:
-                secretKeyRef:
-                  name: db-secret
-                  key: POSTGRES_USER
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: db-secret
-                  key: POSTGRES_PASSWORD
-            - name: POSTGRES_DB
-              valueFrom:
-                secretKeyRef:
-                  name: db-secret
-                  key: POSTGRES_DB
-            - name: DB_HOST
-              value: "postgres"
-            - name: DB_PORT
-              value: "5432"
+      - name: backend
+        image: foodgram-backend:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+        env:
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: db-secret
+                key: POSTGRES_USER
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: db-secret
+                key: POSTGRES_PASSWORD
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                name: db-secret
+                key: POSTGRES_DB
+          - name: DB_HOST
+            value: "postgres"
+          - name: DB_PORT
+            value: "5432"
+          - name: MEDIA_ROOT
+            value: "/app/media"
+        volumeMounts:
+        - name: media-files
+          mountPath: /app/media
+      volumes:
+      - name: media-files
+        persistentVolumeClaim:
+          claimName: media-pvc

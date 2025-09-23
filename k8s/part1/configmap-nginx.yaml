@@ -30,7 +30,7 @@ data:
         }
 
         location /media/ {
-          alias /var/html/media/;
+          alias /app/media/;
         }
 
         location /static/admin/ {
