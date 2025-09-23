@@ -14,32 +14,13 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:alpine
+        image: foodgram-nginx:latest   # твой собранный образ
         ports:
         - containerPort: 80
         volumeMounts:
-        - name: nginx-config
-          mountPath: /etc/nginx/nginx.conf
-          subPath: nginx.conf
-        - name: static-files
-          mountPath: /usr/share/nginx/html/static/
         - name: media-files
           mountPath: /var/html/media/
-        - name: admin-static
-          mountPath: /app/static/admin/
-        - name: frontend-files
-          mountPath: /usr/share/nginx/html/
       volumes:
-      - name: nginx-config
-        configMap:
-          name: nginx-config
-      - name: static-files
-        persistentVolumeClaim:
-          claimName: static-pvc
       - name: media-files
         persistentVolumeClaim:
           claimName: media-pvc
-      - name: admin-static
-        emptyDir: {}
-      - name: frontend-files
-        emptyDir: {}
