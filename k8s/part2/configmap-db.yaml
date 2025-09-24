@@ -4,5 +4,5 @@ metadata:
   namespace: foodgram
   name: db-configmap
 data:
-  host: postgres-headless-svc.foodgram.svc.cluster.local
-  port: "5432"
+  DB_HOST: postgres-headless-svc.foodgram.svc.cluster.local
+  DB_PORT: "5432"
