@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: foodgram-ingress
+  namespace: foodgram
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: foodgram.localhost.ru
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: backend
+            port:
+              number: 8000
