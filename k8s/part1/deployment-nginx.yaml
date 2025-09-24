@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: foodgram-nginx:latest
+        image: udazzzz/foodgram_frontend:latest
         ports:
         - containerPort: 80
         volumeMounts:
