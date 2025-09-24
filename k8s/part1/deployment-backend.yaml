@@ -13,6 +13,38 @@ spec:
       labels:
         app: backend
     spec:
+      initContainers:
+      - name: wait-for-db
+        image: postgres:17
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo "Waiting for PostgreSQL to be ready..."
+            until pg_isready -h $DB_HOST -p $DB_PORT; do
+              sleep 2
+            done
+            echo "PostgreSQL is ready!"
+        env:
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: db-secret
+                key: POSTGRES_USER
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: db-secret
+                key: POSTGRES_PASSWORD
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                name: db-secret
+                key: POSTGRES_DB
+          - name: DB_HOST
+            value: "postgres-headless-svc.foodgram.svc.cluster.local"
+          - name: DB_PORT
+            value: "5432"
+
       containers:
       - name: backend
         image: udazzzz/foodgram_backend:latest
@@ -36,7 +68,7 @@ spec:
                 name: db-secret
                 key: POSTGRES_DB
           - name: DB_HOST
-            value: "postgres"
+            value: "postgres-headless-svc.foodgram.svc.cluster.local"
           - name: DB_PORT
             value: "5432"
           - name: MEDIA_ROOT
@@ -44,6 +76,7 @@ spec:
         volumeMounts:
         - name: media-files
           mountPath: /app/media
+
       volumes:
       - name: media-files
         persistentVolumeClaim:
