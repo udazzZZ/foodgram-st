@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: backend-loaddata
+  namespace: foodgram
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: wait-for-db
+        image: postgres:17
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo "Waiting for PostgreSQL to be ready..."
+            until pg_isready -h $DB_HOST -p $DB_PORT; do
+              sleep 2
+            done
+            echo "PostgreSQL is ready!"
+        env:
+          - name: DB_HOST
+            value: "postgres-headless-svc.foodgram.svc.cluster.local"
+          - name: DB_PORT
+            value: "5432"
+      containers:
+      - name: backend
+        image: udazzzz/foodgram_backend:latest
+        command: ["python", "manage.py", "loaddata", "data/ingredients.json"]
+        env:
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: db-secret
+                key: POSTGRES_USER
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: db-secret
+                key: POSTGRES_PASSWORD
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                name: db-secret
+                key: POSTGRES_DB
+          - name: DB_HOST
+            value: "postgres-headless-svc.foodgram.svc.cluster.local"
+          - name: DB_PORT
+            value: "5432"
+      restartPolicy: OnFailure
