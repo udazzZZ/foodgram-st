@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.nginx.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.nginx.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.nginx.name }}
+    spec:
+      containers:
+      - name: {{ .Values.nginx.name }}
+        image: {{ .Values.nginx.image }}
+        imagePullPolicy: {{ .Values.nginx.imagePullPolicy }}
+        ports:
+        - containerPort: {{ .Values.nginx.port }}
+        volumeMounts:
+        - name: media-files
+          mountPath: {{ .Values.nginx.volumeMountPath }}
+      volumes:
+      - name: media-files
+        persistentVolumeClaim:
+          claimName: {{ .Values.pvc.name }}

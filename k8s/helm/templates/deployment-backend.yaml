@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.backend.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.backend.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.backend.name }}
+    spec:
+      initContainers:
+      - name: wait-for-db
+        image: {{ .Values.postgres.image }}
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo "Waiting for PostgreSQL to be ready..."
+            until pg_isready -h {{ .Values.backend.db.host }} -p {{ .Values.backend.db.port }}; do
+              sleep 2
+            done
+            echo "PostgreSQL is ready!"
+      containers:
+      - name: {{ .Values.backend.name }}
+        image: {{ .Values.backend.image }}
+        imagePullPolicy: {{ .Values.backend.imagePullPolicy }}
+        ports:
+        - containerPort: {{ .Values.backend.port }}
+        env:
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.postgres.secret.name }}
+                key: POSTGRES_USER
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.postgres.secret.name }}
+                key: POSTGRES_PASSWORD
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.postgres.secret.name }}
+                key: POSTGRES_DB
+          - name: DB_HOST
+            value: "{{ .Values.backend.db.host }}"
+          - name: DB_PORT
+            value: "{{ .Values.backend.db.port }}"
+          - name: MEDIA_ROOT
+            value: "{{ .Values.backend.mediaRoot }}"
+        volumeMounts:
+        - name: media-files
+          mountPath: {{ .Values.backend.volumeMountPath }}
+      volumes:
+      - name: media-files
+        persistentVolumeClaim:
+          claimName: {{ .Values.pvc.name }}

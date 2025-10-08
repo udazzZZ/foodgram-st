@@ -1,0 +1,83 @@
+namespace: foodgram
+
+backend:
+  name: backend
+  image: udazzzz/foodgram_backend:latest
+  imagePullPolicy: IfNotPresent
+  replicas: 2
+  port: 8000
+  mediaRoot: /app/media
+  volumeMountPath: /app/media
+  db:
+    host: postgres-headless-svc.foodgram.svc.cluster.local
+    port: 5432
+  env:
+    media_root: /app/media
+
+nginx:
+  name: nginx
+  image: udazzzz/foodgram_frontend:latest
+  imagePullPolicy: IfNotPresent
+  port: 80
+  volumeMountPath: /app/media/
+
+pvc:
+  name: media-pvc
+  accessModes:
+    - ReadWriteMany
+  storage: 5Gi
+
+ingress:
+  name: foodgram-ingress
+  className: nginx
+  host: foodgram.localhost.ru
+  paths:
+    - path: /api
+      service: backend
+      port: 8000
+    - path: /admin
+      service: backend
+      port: 8000
+    - path: /static
+      service: nginx
+      port: 80
+    - path: /media
+      service: nginx
+      port: 80
+    - path: /
+      service: nginx
+      port: 80
+
+postgres:
+  name: postgres
+  statefulsetName: postgres-sts
+  appLabel: postgres
+  image: postgres:17
+  imagePullPolicy: IfNotPresent
+  replicas: 1
+  port: 5432
+  storage: 10Gi
+  dataPath: /var/lib/postgresql/data
+  pgData: /var/lib/postgresql/data/pgdata
+  headlessService:
+    name: postgres-headless-svc
+    clusterIP: None
+  secret:
+    name: db-secret
+    username: postgres
+    password: mysecretpassword
+    database: foodgram
+  configmap:
+    name: db-configmap
+    DB_HOST: postgres-headless-svc.foodgram.svc.cluster.local
+    DB_PORT: 5432
+
+jobMigrate:
+  name: backend-migrations
+  command: ["python", "manage.py", "migrate", "--noinput"]
+  restartPolicy: OnFailure
+
+jobLoaddata:
+  name: backend-loaddata
+  command: ["python", "manage.py", "loaddata", "data/ingredients.json"]
+  restartPolicy: OnFailure

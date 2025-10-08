@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.jobLoaddata.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: wait-for-db
+          image: {{ .Values.postgres.image }}
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "Waiting for PostgreSQL to be ready..."
+              until pg_isready -h $DB_HOST -p $DB_PORT; do
+                sleep 2
+              done
+              echo "PostgreSQL is ready!"
+          env:
+            - name: DB_HOST
+              value: "{{ .Values.backend.db.host }}"
+            - name: DB_PORT
+              value: "{{ .Values.backend.db.port }}"
+      containers:
+        - name: {{ .Values.backend.name }}
+          image: {{ .Values.backend.image }}
+          imagePullPolicy: {{ .Values.backend.imagePullPolicy }}
+          command: {{ toJson .Values.jobLoaddata.command }}
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.secret.name }}
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.secret.name }}
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.secret.name }}
+                  key: POSTGRES_DB
+            - name: DB_HOST
+              value: "{{ .Values.backend.db.host }}"
+            - name: DB_PORT
+              value: "{{ .Values.backend.db.port }}"
+      restartPolicy: {{ .Values.jobLoaddata.restartPolicy }}
