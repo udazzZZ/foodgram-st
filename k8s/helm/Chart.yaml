@@ -3,3 +3,7 @@ name: foodgram
 version: 0.1.0
 description: Helm chart for Foodgram project
 type: application
+dependencies:
+  - name: secrets
+    version: 0.1.0
+    repository: "file://charts/secrets"

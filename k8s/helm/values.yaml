@@ -64,9 +64,9 @@ postgres:
     clusterIP: None
   secret:
     name: db-secret
-    username: postgres
-    password: mysecretpassword
-    database: foodgram
+    username: ref+vault://secrets/db#/POSTGRES_USER
+    password: ref+vault://secrets/db#/POSTGRES_PASSWORD
+    database: ref+vault://secrets/db#/POSTGRES_DB
   configmap:
     name: db-configmap
     DB_HOST: postgres-headless-svc.foodgram.svc.cluster.local
