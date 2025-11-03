@@ -1,0 +1,17 @@
+auth:
+  username: ref+vault://secrets/rabbitmq#/username
+  password: ref+vault://secrets/rabbitmq#/password
+
+ingress:
+  enabled: true
+  hosts:
+  - host: rabbitmq.foodgram.localhost.ru
+    paths:
+    - path: /
+      pathType: Prefix
+  annotations:
+    cert-manager.io/cluster-issuer: "http01-clusterissuer"
+  className: nginx
+
+service:
+  type: LoadBalancer
