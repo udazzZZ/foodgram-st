@@ -29,4 +29,3 @@ pika
 hvac
 celery
 flower
-gunicorn==20.1.0
