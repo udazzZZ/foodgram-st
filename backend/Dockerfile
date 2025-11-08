@@ -6,12 +6,8 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-RUN pip install daphne
-RUN pip install gunicorn==20.1.0
-
 COPY requirements.txt .
-
-RUN pip install -r requirements.txt --no-cache-dir
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
