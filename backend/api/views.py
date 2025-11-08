@@ -286,14 +286,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return response
 
 
-@api_view(['POST', 'GET'])
+@api_view(['POST'])
 @permission_classes([AllowAny])
 def run_bible_verse_task(request):
     task = get_bible_verse.delay()
     return Response({'task_id': task.id})
 
 
-@api_view(['POST', 'GET'])
+@api_view(['POST'])
 @permission_classes([AllowAny])
 def run_book_task(request):
     book = request.data.get('book', 'twain')
