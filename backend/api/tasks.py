@@ -9,6 +9,6 @@ def get_book(book):
 
 @shared_task
 def get_bible_verse():
-    url = f"https://bible-api.com/data/web/random"
+    url = "https://bible-api.com/data/web/random"
     resp = requests.get(url)
     return resp.json()

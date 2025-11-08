@@ -9,7 +9,7 @@ from django.http import HttpResponse
 from djoser.views import UserViewSet as DjoserUserViewSet
 from .filters import RecipeFilter, IngredientFilter
 
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from .tasks import get_bible_verse, get_book
 from celery.result import AsyncResult
