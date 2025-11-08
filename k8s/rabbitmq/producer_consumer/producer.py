@@ -13,7 +13,7 @@ data_weather = {
 }
 
 def main():
-    data = data_food
+    data = data_weather
 
     json_data = json.dumps(data)
 

@@ -9,6 +9,11 @@ from django.http import HttpResponse
 from djoser.views import UserViewSet as DjoserUserViewSet
 from .filters import RecipeFilter, IngredientFilter
 
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from .tasks import get_bible_verse, get_book
+from celery.result import AsyncResult
+
 from recipes.models import (
     Recipe, Ingredient, IngredientRecipe
 )
@@ -279,3 +284,29 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'attachment; filename="shopping_cart.txt"'
         )
         return response
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def run_bible_verse_task(request):
+    task = get_bible_verse.delay()
+    return Response({'task_id': task.id})
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def run_book_task(request):
+    book = request.data.get('book', 'twain')
+    task = get_book.delay(book)
+    return Response({'task_id': task.id})
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_task_status(request, task_id):
+    result = AsyncResult(task_id)
+    return Response({
+        'task_id': task_id,
+        'status': result.status,
+        'result': result.result if result.ready() else None,
+    })
