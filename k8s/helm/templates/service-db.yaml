@@ -2,14 +2,14 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ .Values.postgres.headlessService.name }}
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.global.namespace }}
 spec:
   type: ClusterIP
   clusterIP: {{ .Values.postgres.headlessService.clusterIP }}
   ports:
     - name: postgresql
-      port: {{ .Values.postgres.port }}
-      targetPort: {{ .Values.postgres.port }}
+      port: {{ .Values.global.db.port }}
+      targetPort: {{ .Values.global.db.port }}
       protocol: TCP
   selector:
     app: {{ .Values.postgres.appLabel }}

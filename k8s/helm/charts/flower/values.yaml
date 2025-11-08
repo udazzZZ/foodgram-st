@@ -1,0 +1,35 @@
+service:
+  type: ClusterIP
+  ports:
+    port: 80
+    targetPort: 5555
+    protocol: TCP
+
+deployment:
+  replicas: 1
+  command: ["celery"]
+  args: ["-A", "backend", "flower", "-l", "DEBUG"]
+  env:
+    secret:
+      db:
+        POSTGRES_USER: POSTGRES_USER
+        POSTGRES_PASSWORD: POSTGRES_PASSWORD
+        POSTGRES_DB: POSTGRES_DB
+      rabbitmq:
+        BROKER_USER: username
+        BROKER_PASSWORD: password
+    config:
+      db:
+        DB_HOST: DB_HOST
+        DB_PORT: DB_PORT
+      rabbitmq:
+        BROKER_HOST: host
+        BROKER_PORT: port
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+
+ingress:
+  className: nginx
+  host: flower.foodgram.localhost.ru

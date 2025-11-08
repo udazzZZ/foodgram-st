@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: {{ .Values.deployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        image: {{ $.Values.global.images.api.name }}
+        imagePullPolicy: {{ $.Values.global.images.api.pullPolicy }}
+        command:  ["celery", "-A", "backend", "worker", "--loglevel=info"]
+        env:
+          {{- range $alias, $mapping := .Values.deployment.env.secret }}
+          {{- range $key, $val := $mapping }}
+          - name: {{ $key }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ index $.Values.global.secret $alias }}
+                key: {{ $val }}
+          {{- end}}
+          {{- end }}
+          {{- range $alias, $mapping := .Values.deployment.env.config }}
+          {{- range $key, $val := $mapping }}
+          - name: {{ $key }}
+            valueFrom:
+              configMapKeyRef:
+                name: {{ index $.Values.global.config $alias }}
+                key: {{ $val }}
+          {{- end}}
+          {{- end }}
+          - name: CELERY_BROKER_URL
+            value: "amqp://admin:secretpassword@my-rabbitmq.foodgram.svc.cluster.local:5672//"
+  strategy: {{ .Values.deployment.strategy | toJson }}

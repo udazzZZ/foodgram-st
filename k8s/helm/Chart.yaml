@@ -3,3 +3,13 @@ name: foodgram
 version: 0.1.0
 description: Helm chart for Foodgram project
 type: application
+dependencies:
+  - name: rabbitmq
+    version: 0.1.0
+    repository: "file://charts/rabbitmq"
+  - name: flower
+    version: 0.1.0
+    repository: "file://charts/flower"
+  - name: celery-worker
+    version: 0.1.0
+    repository: "file://charts/celery-worker"

@@ -2,17 +2,17 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ .Values.jobMigrate.name }}
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.global.namespace }}
 spec:
   template:
     spec:
       containers:
       - name: {{ .Values.backend.name }}
-        image: {{ .Values.backend.image }}
+        image: {{ .Values.global.images.api.name }}
         command: {{ toJson .Values.jobMigrate.command }}
         envFrom:
         - secretRef:
-            name: {{ .Values.postgres.secret.name }}
+            name: {{ .Values.global.secret.db }}
         - configMapRef:
-            name: {{ .Values.postgres.configmap.name }}
+            name: {{ .Values.global.config.db }}
       restartPolicy: {{ .Values.jobMigrate.restartPolicy }}

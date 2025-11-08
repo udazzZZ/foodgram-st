@@ -1,18 +1,42 @@
-namespace: foodgram
+global:
+  namespace: foodgram
+  db:
+    host: postgres-headless-svc.foodgram.svc.cluster.local
+    port: 5432
+  secret:
+    db: db-secret
+    rabbitmq: rabbit-secret
+  config:
+    db: db-configmap
+    rabbitmq: rabbit-config
+  images: 
+    api:
+      name: udazzzz/foodgram_backend:latest
+      pullPolicy: Always
 
 backend:
   name: backend
-  image: udazzzz/foodgram_backend:latest
-  imagePullPolicy: IfNotPresent
   replicas: 2
   port: 8000
   mediaRoot: /app/media
   volumeMountPath: /app/media
-  db:
-    host: postgres-headless-svc.foodgram.svc.cluster.local
-    port: 5432
   env:
     media_root: /app/media
+    secret:
+      db:
+        POSTGRES_USER: POSTGRES_USER
+        POSTGRES_PASSWORD: POSTGRES_PASSWORD
+        POSTGRES_DB: POSTGRES_DB
+      rabbitmq:
+        BROKER_USER: username
+        BROKER_PASSWORD: password
+    config:
+      db:
+        DB_HOST: DB_HOST
+        DB_PORT: DB_PORT
+      rabbitmq:
+        BROKER_HOST: host
+        BROKER_PORT: port
 
 nginx:
   name: nginx
@@ -55,7 +79,6 @@ postgres:
   image: postgres:17
   imagePullPolicy: IfNotPresent
   replicas: 1
-  port: 5432
   storage: 10Gi
   dataPath: /var/lib/postgresql/data
   pgData: /var/lib/postgresql/data/pgdata
@@ -63,14 +86,9 @@ postgres:
     name: postgres-headless-svc
     clusterIP: None
   secret:
-    name: db-secret
     username: ref+vault://secrets/db#/POSTGRES_USER
     password: ref+vault://secrets/db#/POSTGRES_PASSWORD
     database: ref+vault://secrets/db#/POSTGRES_DB
-  configmap:
-    name: db-configmap
-    DB_HOST: postgres-headless-svc.foodgram.svc.cluster.local
-    DB_PORT: 5432
 
 jobMigrate:
   name: backend-migrations

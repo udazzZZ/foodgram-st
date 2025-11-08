@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ .Values.postgres.statefulsetName }}
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.global.namespace }}
 spec:
   serviceName: {{ .Values.postgres.headlessService.name }}
   replicas: {{ .Values.postgres.replicas }}
@@ -24,21 +24,21 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.postgres.secret.name }}
+                  name: {{ .Values.global.secret.db }}
                   key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.postgres.secret.name }}
+                  name: {{ .Values.global.secret.db }}
                   key: POSTGRES_PASSWORD
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.postgres.secret.name }}
+                  name: {{ .Values.global.secret.db }}
                   key: POSTGRES_DB
           ports:
             - name: postgresql
-              containerPort: {{ .Values.postgres.port }}
+              containerPort: {{ .Values.global.db.port }}
               protocol: TCP
           volumeMounts:
             - name: data

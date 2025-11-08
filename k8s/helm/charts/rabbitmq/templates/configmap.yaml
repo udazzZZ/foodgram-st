@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ $.Values.global.namespace }}
+  name: {{ $.Values.global.config.rabbitmq }}
+data:
+  host: rabbitmq.foodgram.localhost.ru
+  port: {{ .Values.service.port | quote }}
+  {{- range $key, $val := .Values.config }}
+  {{ $key }}: {{ $val }}
+  {{- end }}
