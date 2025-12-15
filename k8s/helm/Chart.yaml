@@ -13,3 +13,6 @@ dependencies:
   - name: celery-worker
     version: 0.1.0
     repository: "file://charts/celery-worker"
+  - name: redis
+    version: 0.1.0
+    repository: "file://charts/redis"

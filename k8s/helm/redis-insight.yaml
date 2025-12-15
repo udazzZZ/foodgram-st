@@ -1,0 +1,13 @@
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  pathType: Prefix
+  hosts:
+    - host: redis-insight.foodgram.localhost.ru
+      paths:
+      - /
+      pathType: Prefix
+
+persistentVolumeClaim:
+  create: true

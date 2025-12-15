@@ -4,5 +4,5 @@ service:
 config: {}
 
 secret:
-  username: ref+vault://secrets/rabbitmq#/username
-  password: ref+vault://secrets/rabbitmq#/password
+  username: username
+  password: password
