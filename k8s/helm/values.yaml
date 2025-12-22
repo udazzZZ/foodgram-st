@@ -6,9 +6,11 @@ global:
   secret:
     db: db-secret
     rabbitmq: rabbit-secret
+    redis: redis-secret
   config:
     db: db-configmap
     rabbitmq: rabbit-config
+    redis: redis-configmap
   images: 
     api:
       name: udazzzz/foodgram_backend:latest
@@ -30,6 +32,8 @@ backend:
       rabbitmq:
         BROKER_USER: username
         BROKER_PASSWORD: password
+      redis:
+        REDIS_PASSWORD: password
     config:
       db:
         DB_HOST: DB_HOST
@@ -37,6 +41,9 @@ backend:
       rabbitmq:
         BROKER_HOST: host
         BROKER_PORT: port
+      redis:
+        REDIS_HOST: host
+        REDIS_PORT: port
 
 nginx:
   name: nginx

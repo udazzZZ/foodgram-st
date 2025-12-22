@@ -17,3 +17,10 @@ statefulset:
     mountPath: /data/redis
     accessMode: ReadWriteOnce
     storage: 1Gi
+
+config:
+  host: redis-headless-service
+  port: 6379
+
+secret:
+  password: ref+vault://secrets/redis#/password

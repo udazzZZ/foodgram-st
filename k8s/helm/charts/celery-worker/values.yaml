@@ -11,6 +11,8 @@ deployment:
       rabbitmq:
         BROKER_USER: username
         BROKER_PASSWORD: password
+      redis:
+        REDIS_PASSWORD: password
     config:
       db:
         DB_HOST: DB_HOST
@@ -18,6 +20,9 @@ deployment:
       rabbitmq:
         BROKER_HOST: host
         BROKER_PORT: port
+      redis:
+        REDIS_HOST: host
+        REDIS_PORT: port
   strategy:
     type: RollingUpdate
     rollingUpdate:
