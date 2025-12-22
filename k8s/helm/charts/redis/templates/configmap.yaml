@@ -5,5 +5,5 @@ metadata:
   name: {{ $.Values.global.config.redis }}
 data:
   {{- range $key, $val := .Values.config }}
-  {{ $key }}: {{ $val }}
+  {{ $key }}: {{ $val | quote }}
   {{- end }}

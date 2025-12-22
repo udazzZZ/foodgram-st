@@ -53,6 +53,5 @@ class Redis:
             return json.loads(data)
         return None
 
-    def cache_set(self, key, value):
-        ttl = int(os.getenv("TTL"))
+    def cache_set(self, key, value, ttl=86400):
         self.redis.set(key, json.dumps(value), ex=ttl)

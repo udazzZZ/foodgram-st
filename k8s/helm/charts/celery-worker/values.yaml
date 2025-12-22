@@ -21,8 +21,8 @@ deployment:
         BROKER_HOST: host
         BROKER_PORT: port
       redis:
-        REDIS_HOST: host
-        REDIS_PORT: port
+        APP_REDIS_HOST: host
+        APP_REDIS_PORT: port
   strategy:
     type: RollingUpdate
     rollingUpdate:
