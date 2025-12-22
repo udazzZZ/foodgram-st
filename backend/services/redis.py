@@ -21,7 +21,7 @@ class Redis:
     def _create_client(self):
         return redis.Redis(
             host=os.getenv("REDIS_HOST"),
-            port=os.getenv("REDIS_PORT"),
+            port=int(os.getenv("REDIS_PORT")),
             decode_responses=True
         )
 
@@ -54,5 +54,5 @@ class Redis:
         return None
 
     def cache_set(self, key, value):
-        ttl = os.getenv("TTL")
+        ttl = int(os.getenv("TTL"))
         self.redis.set(key, json.dumps(value), ex=ttl)
