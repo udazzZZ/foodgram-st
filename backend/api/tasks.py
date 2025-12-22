@@ -46,13 +46,13 @@ def get_bible_verse():
 
     pipe = redis_client.redis.pipeline()
 
-    for verse in resp["random_verse"]["text"]:
+    for verse in resp["random_verse"]:
         key = f"bible:{uuid.uuid4()}"
         pipe.hset(
             key,
             mapping={
                 "source": "bible",
-                "quote": verse,
+                "quote": verse["text"],
                 "timestamp": datetime.now().isoformat()
             }
         )
