@@ -20,8 +20,8 @@ class Redis:
 
     def _create_client(self):
         return redis.Redis(
-            host=os.getenv("REDIS_HOST"),
-            port=int(os.getenv("REDIS_PORT")),
+            host=os.getenv("APP_REDIS_HOST"),
+            port=int(os.getenv("APP_REDIS_PORT")),
             decode_responses=True
         )
 
