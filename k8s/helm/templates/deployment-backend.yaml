@@ -47,6 +47,8 @@ spec:
         volumeMounts:
         - name: media-files
           mountPath: {{ .Values.backend.volumeMountPath }}
+        resources:
+{{ toYaml .Values.backend.resources | indent 10 }}
       volumes:
       - name: media-files
         persistentVolumeClaim:

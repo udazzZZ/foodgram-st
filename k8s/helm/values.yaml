@@ -22,6 +22,45 @@ backend:
   port: 8000
   mediaRoot: /app/media
   volumeMountPath: /app/media
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 700m
+      memory: 512Mi
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 0
+        selectPolicy: Max
+        policies:
+          - type: Percent
+            value: 100
+            periodSeconds: 60
+          - type: Pods
+            value: 2
+            periodSeconds: 60
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        selectPolicy: Min
+        policies:
+          - type: Percent
+            value: 50
+            periodSeconds: 60
+  vpa:
+    enabled: true
+    updateMode: "Off"
+    controlledResources:
+      - memory
+    minAllowed:
+      memory: 256Mi
+    maxAllowed:
+      memory: 1Gi
   env:
     media_root: /app/media
     secret:

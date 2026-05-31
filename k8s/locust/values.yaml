@@ -1,0 +1,33 @@
+global:
+  namespace: foodgram
+
+locust:
+  name: load-test-v2
+  image: locustio/locust:latest
+  workers: 2
+  host: http://backend.foodgram.svc.cluster.local:8000
+  users: 80
+  spawnRate: 10
+  runTime: 8m
+  logLevel: INFO
+  resources:
+    master:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    worker:
+      requests:
+        cpu: 300m
+        memory: 256Mi
+      limits:
+        cpu: 800m
+        memory: 512Mi
+
+ingress:
+  enabled: true
+  name: load-test-v2-ingress
+  className: nginx
+  host: locust.foodgram.localhost.ru

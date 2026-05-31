@@ -1,0 +1,26 @@
+apiVersion: locust.io/v1
+kind: LocustTest
+metadata:
+  name: {{ .Values.locust.name }}
+  namespace: {{ .Values.global.namespace }}
+spec:
+  image: {{ .Values.locust.image }}
+  workers: {{ .Values.locust.workers }}
+  args: |
+    -f locustfile.py
+    --host {{ .Values.locust.host }}
+    --run-time={{ .Values.locust.runTime }}
+    --users={{ .Values.locust.users }}
+    --spawn-rate={{ .Values.locust.spawnRate }}
+  env:
+    - name: LOCUST_LOGLEVEL
+      value: {{ .Values.locust.logLevel | quote }}
+  locustfile:
+    configMap:
+      name: {{ .Values.locust.name }}-locustfile
+  master:
+    resources:
+{{ toYaml .Values.locust.resources.master | indent 6 }}
+  worker:
+    resources:
+{{ toYaml .Values.locust.resources.worker | indent 6 }}

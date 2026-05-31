@@ -1,0 +1,23 @@
+{{- if .Values.backend.vpa.enabled }}
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: {{ .Values.backend.name }}-vpa
+  namespace: {{ .Values.global.namespace }}
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.backend.name }}
+  updatePolicy:
+    updateMode: {{ .Values.backend.vpa.updateMode | quote }}
+  resourcePolicy:
+    containerPolicies:
+      - containerName: {{ .Values.backend.name }}
+        controlledResources:
+{{ toYaml .Values.backend.vpa.controlledResources | indent 10 }}
+        minAllowed:
+{{ toYaml .Values.backend.vpa.minAllowed | indent 10 }}
+        maxAllowed:
+{{ toYaml .Values.backend.vpa.maxAllowed | indent 10 }}
+{{- end }}
