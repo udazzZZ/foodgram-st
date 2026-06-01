@@ -1,0 +1,14 @@
+name: Runner Smoke Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: foodgram-runner-set
+    steps:
+      - name: Check runner
+        run: |
+          echo "Runner: ${RUNNER_NAME}"
+          uname -a
+          docker version

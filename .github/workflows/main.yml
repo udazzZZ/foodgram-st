@@ -4,31 +4,65 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: foodgram-release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  BACKEND_IMAGE: ${{ secrets.DOCKER_USERNAME }}/foodgram_backend
+  FRONTEND_IMAGE: ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend
 
 jobs:
   checkout-code-pep8:
-    runs-on: ubuntu-latest
+    runs-on: foodgram-runner-set
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip 
+          python -m pip install --upgrade pip
           pip install ruff==0.8.0
       - name: Tests
-        run: |
-          python -m ruff check backend/
+        run: python -m ruff check backend/
+
+  release:
+    name: Create semantic release
+    runs-on: foodgram-runner-set
+    needs: checkout-code-pep8
+    outputs:
+      published: ${{ steps.semantic.outputs.new_release_published }}
+      version: ${{ steps.semantic.outputs.new_release_version }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Semantic release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build_backend_and_push_to_docker_hub:
-    name: Push Docker image to DockerHub
-    runs-on: ubuntu-latest
-    needs: checkout-code-pep8
+    name: Build and push backend image
+    runs-on: foodgram-runner-set
+    needs: release
+    if: needs.release.outputs.published == 'true'
     steps:
-      - name: Check out the repo
+      - name: Check out code
         uses: actions/checkout@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -42,13 +76,17 @@ jobs:
         with:
           context: ./backend/
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_backend:latest
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:${{ needs.release.outputs.version }}
+            ${{ env.BACKEND_IMAGE }}:latest
 
   build_frontend_and_push_to_docker_hub:
-    name: Push frontend Docker image to DockerHub
-    runs-on: ubuntu-latest
+    name: Build and push frontend image
+    runs-on: foodgram-runner-set
+    needs: release
+    if: needs.release.outputs.published == 'true'
     steps:
-      - name: Check out the repo
+      - name: Check out code
         uses: actions/checkout@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -62,4 +100,51 @@ jobs:
         with:
           context: ./frontend/
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:latest
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:${{ needs.release.outputs.version }}
+            ${{ env.FRONTEND_IMAGE }}:latest
+
+  deploy:
+    name: Deploy release to Kubernetes
+    runs-on: foodgram-runner-set
+    needs:
+      - release
+      - build_backend_and_push_to_docker_hub
+      - build_frontend_and_push_to_docker_hub
+    if: needs.release.outputs.published == 'true'
+    env:
+      KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG_B64 }}
+      VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+      RELEASE_VERSION: ${{ needs.release.outputs.version }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+      - name: Install helm-secrets
+        run: helm plugin install https://github.com/jkroepke/helm-secrets
+      - name: Install vals
+        run: |
+          VALS_VERSION="0.43.2"
+          curl -sSL "https://github.com/helmfile/vals/releases/download/v${VALS_VERSION}/vals_${VALS_VERSION}_linux_amd64.tar.gz" | tar -xz vals
+          mkdir -p "${HOME}/.local/bin"
+          mv vals "${HOME}/.local/bin/vals"
+          echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${KUBE_CONFIG_B64}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+      - name: Deploy Helm release
+        working-directory: k8s/helm
+        run: |
+          helm dependency update
+          helm secrets --evaluate-templates --backend vals upgrade --install foodgram ./ \
+            --namespace foodgram \
+            --create-namespace \
+            -f values.yaml \
+            --set global.images.api.name="${BACKEND_IMAGE}:${RELEASE_VERSION}" \
+            --set nginx.image="${FRONTEND_IMAGE}:${RELEASE_VERSION}"

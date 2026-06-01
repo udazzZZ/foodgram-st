@@ -1,0 +1,10 @@
+githubConfigUrl: ""
+githubConfigSecret: github-runner-secret
+
+runnerScaleSetName: foodgram-runner-set
+
+minRunners: 1
+maxRunners: 3
+
+containerMode:
+  type: dind
