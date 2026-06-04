@@ -31,7 +31,7 @@ docker-compose up --build
 После запуска контейнеров в новом окне терминала, находясь в главной папке проекта, выполнить последовательно:
 
 ```bash
-docker exec -it backend python manage.py loaddata data/ingredients.json 
+docker exec -it backend python manage.py loaddata data/ingredients.json
 ```
 
 ```bash
