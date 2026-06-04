@@ -1,17 +1,16 @@
 FROM python:3.10
 
-RUN apt-get update && \
-    apt-get install -y netcat-openbsd && \
-    rm -rf /var/lib/apt/lists/*
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
 
 WORKDIR /app
 
-RUN pip install daphne
-RUN pip install gunicorn==20.1.0
+RUN pip install daphne gunicorn==20.1.0
 
 COPY requirements.txt .
 
-RUN pip install -r requirements.txt --no-cache-dir
+RUN pip install -r requirements.txt
 
 COPY . .
 
