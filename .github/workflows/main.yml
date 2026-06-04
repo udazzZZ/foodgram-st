@@ -132,24 +132,17 @@ jobs:
         uses: azure/setup-kubectl@v4
       - name: Install helm-secrets
         run: helm plugin install https://github.com/jkroepke/helm-secrets --verify=false
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
       - name: Install vals
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          VALS_VERSION="0.43.2"
-          VALS_URL="$(curl -fsSL \
-            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            "https://api.github.com/repos/helmfile/vals/releases/tags/v${VALS_VERSION}" \
-            | grep browser_download_url \
-            | grep linux_amd64.tar.gz \
-            | cut -d '"' -f 4 \
-            | head -n 1)"
-          test -n "${VALS_URL}"
-          curl -fsSL "${VALS_URL}" | tar -xz vals
           mkdir -p "${HOME}/.local/bin"
-          mv vals "${HOME}/.local/bin/vals"
+          GOBIN="${HOME}/.local/bin" go install github.com/helmfile/vals/cmd/vals@v0.43.2
           echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+          "${HOME}/.local/bin/vals" version
       - name: Configure kubeconfig
         run: |
           mkdir -p ~/.kube
