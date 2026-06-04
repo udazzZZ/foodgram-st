@@ -142,3 +142,4 @@ static/
 media/
 
 vault_keys.txt
+kubeconfig-ci.yaml
