@@ -131,7 +131,7 @@ jobs:
       - name: Set up kubectl
         uses: azure/setup-kubectl@v4
       - name: Install helm-secrets
-        run: helm plugin install https://github.com/jkroepke/helm-secrets
+        run: helm plugin install https://github.com/jkroepke/helm-secrets --verify=false
       - name: Install vals
         run: |
           VALS_VERSION="0.43.2"
