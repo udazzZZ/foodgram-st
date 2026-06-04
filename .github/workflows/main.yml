@@ -83,8 +83,19 @@ jobs:
             ./backend/
       - name: Push backend image
         run: |
-          docker push "${BACKEND_IMAGE}:${{ needs.release.outputs.version }}"
-          docker push "${BACKEND_IMAGE}:latest"
+          push_with_retry() {
+            image="$1"
+            for attempt in 1 2 3 4 5; do
+              docker push "${image}" && return 0
+              if [ "${attempt}" = "5" ]; then
+                return 1
+              fi
+              sleep $((attempt * 15))
+            done
+          }
+
+          push_with_retry "${BACKEND_IMAGE}:${{ needs.release.outputs.version }}"
+          push_with_retry "${BACKEND_IMAGE}:latest"
 
   build_frontend_and_push_to_docker_hub:
     name: Build and push frontend image
@@ -113,8 +124,19 @@ jobs:
             ./frontend/
       - name: Push frontend image
         run: |
-          docker push "${FRONTEND_IMAGE}:${{ needs.release.outputs.version }}"
-          docker push "${FRONTEND_IMAGE}:latest"
+          push_with_retry() {
+            image="$1"
+            for attempt in 1 2 3 4 5; do
+              docker push "${image}" && return 0
+              if [ "${attempt}" = "5" ]; then
+                return 1
+              fi
+              sleep $((attempt * 15))
+            done
+          }
+
+          push_with_retry "${FRONTEND_IMAGE}:${{ needs.release.outputs.version }}"
+          push_with_retry "${FRONTEND_IMAGE}:latest"
 
   deploy:
     name: Deploy release to Kubernetes
