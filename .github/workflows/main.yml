@@ -130,19 +130,45 @@ jobs:
         uses: azure/setup-helm@v4
       - name: Set up kubectl
         uses: azure/setup-kubectl@v4
-      - name: Install helm-secrets
-        run: helm plugin install https://github.com/jkroepke/helm-secrets --verify=false
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          go-version: "1.24"
-      - name: Install vals
+          python-version: "3.10"
+      - name: Load secrets from Vault
+        id: vault
         run: |
-          set -euo pipefail
-          mkdir -p "${HOME}/.local/bin"
-          GOBIN="${HOME}/.local/bin" go install github.com/helmfile/vals/cmd/vals@v0.43.2
-          echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
-          "${HOME}/.local/bin/vals" version
+          python - <<'PY'
+          import json
+          import os
+          import urllib.request
+
+          vault_addr = os.environ["VAULT_ADDR"].rstrip("/")
+          vault_token = os.environ["VAULT_TOKEN"]
+
+          def read_secret(path):
+              request = urllib.request.Request(
+                  f"{vault_addr}/v1/{path}",
+                  headers={"X-Vault-Token": vault_token},
+              )
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  payload = json.load(response)
+              data = payload["data"]
+              return data.get("data", data)
+
+          db = read_secret("secrets/db")
+          redis = read_secret("secrets/redis")
+
+          outputs = {
+              "postgres_user": db["POSTGRES_USER"],
+              "postgres_password": db["POSTGRES_PASSWORD"],
+              "postgres_db": db["POSTGRES_DB"],
+              "redis_password": redis["password"],
+          }
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              for key, value in outputs.items():
+                  output.write(f"{key}={value}\n")
+          PY
       - name: Configure kubeconfig
         run: |
           mkdir -p ~/.kube
@@ -152,9 +178,13 @@ jobs:
         working-directory: k8s/helm
         run: |
           helm dependency update
-          helm secrets --evaluate-templates --backend vals upgrade --install foodgram ./ \
+          helm upgrade --install foodgram ./ \
             --namespace foodgram \
             --create-namespace \
             -f values.yaml \
             --set global.images.api.name="${BACKEND_IMAGE}:${RELEASE_VERSION}" \
-            --set nginx.image="${FRONTEND_IMAGE}:${RELEASE_VERSION}"
+            --set nginx.image="${FRONTEND_IMAGE}:${RELEASE_VERSION}" \
+            --set-string postgres.secret.username="${{ steps.vault.outputs.postgres_user }}" \
+            --set-string postgres.secret.password="${{ steps.vault.outputs.postgres_password }}" \
+            --set-string postgres.secret.database="${{ steps.vault.outputs.postgres_db }}" \
+            --set-string redis.secret.password="${{ steps.vault.outputs.redis_password }}"
