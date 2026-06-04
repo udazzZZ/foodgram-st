@@ -155,8 +155,8 @@ jobs:
               data = payload["data"]
               return data.get("data", data)
 
-          db = read_secret("secrets/db")
-          redis = read_secret("secrets/redis")
+          db = read_secret("secrets/data/db")
+          redis = read_secret("secrets/data/redis")
 
           outputs = {
               "postgres_user": db["POSTGRES_USER"],
