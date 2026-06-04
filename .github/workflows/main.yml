@@ -133,9 +133,20 @@ jobs:
       - name: Install helm-secrets
         run: helm plugin install https://github.com/jkroepke/helm-secrets --verify=false
       - name: Install vals
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           VALS_VERSION="0.43.2"
-          curl -sSL "https://github.com/helmfile/vals/releases/download/v${VALS_VERSION}/vals_${VALS_VERSION}_linux_amd64.tar.gz" | tar -xz vals
+          VALS_URL="$(curl -fsSL \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            "https://api.github.com/repos/helmfile/vals/releases/tags/v${VALS_VERSION}" \
+            | grep browser_download_url \
+            | grep linux_amd64.tar.gz \
+            | cut -d '"' -f 4 \
+            | head -n 1)"
+          test -n "${VALS_URL}"
+          curl -fsSL "${VALS_URL}" | tar -xz vals
           mkdir -p "${HOME}/.local/bin"
           mv vals "${HOME}/.local/bin/vals"
           echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
